@@ -1,0 +1,41 @@
+Data Science & Analytics – Task 3 (2026)
+By Future Interns
+
+Marketing Funnel & Conversion Performance Analysis
+
+🔍 About the Task
+In this task, you will analyze marketing and lead funnel data to understand how users move from visitors → leads → customers.
+This type of analysis is core work in startups, digital marketing agencies, SaaS companies, and sales teams, where improving conversion rates directly increases revenue.
+
+
+Your goal is to help a business answer questions like:
+Where are users dropping off in the funnel?
+Which channels bring high-quality leads?
+How can conversion rates be improved?
+Which stages need optimization?
+
+✅ What You’ll Do
+-Clean and structure funnel or lead data
+-Analyze:
+Traffic-to-lead conversion
+Lead-to-customer conversion
+Drop-off points at each funnel stage
+-Compare performance across channels, campaigns, or time periods
+-Provide clear recommendations to improve conversions
+(Choose tools based on how you want to visualize and analyze the funnel.)
+
+
+🛠️ Tools You Can Use
+Choose tools based on how you want to analyze, automate, or visualize data — just like in real analytics
+
+-Power BI – https://powerbi.microsoft.com/
+Used for building interactive dashboards and presenting funnel performance to stakeholders.
+
+-Tableau – https://www.tableau.com/
+Used for advanced visual storytelling and executive-level dashboards.
+
+-Jupyter Notebook – https://jupyter.org/
+Used for exploratory data analysis, funnel metrics, and documenting analytical logic.
+
+-VS Code – https://code.visualstudio.com/
+Used for structured analysis, scripts, and working with larger datasets or projects.
