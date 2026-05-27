@@ -1,0 +1,249 @@
+----to see all the values in the dataset
+Select*
+from customers.conversion.data;
+
+--------SessionID
+
+----to see the diiferent sessions-which we have a 5000 different sessions
+Select distinct(SessionID) as distinct_sessions
+from customers.conversion.data;
+
+---to check nulls in our column--We have no nulls
+Select SessionID
+from customers.conversion.data
+WHERE SessionID IS NULL;
+
+------UserID
+----to see the diiferent users-which we have a 1872 users
+Select distinct(UserID) as distinct_users
+from customers.conversion.data;
+
+---to check nulls in our column--We have no nulls
+Select UserID
+from customers.conversion.data
+WHERE UserID IS NULL;
+
+---to count customer with atleast one item in cart
+SELECT 
+    COUNT(DISTINCT UserID) AS Number_of_lead_customers
+FROM customers.conversion.data
+WHERE ItemsInCart > 0;
+
+
+-------------Refferral source
+----to see the diiferent refferrals-which we have a 4 different refferrals
+Select distinct(ReferralSource) as distinct_refferral
+from customers.conversion.data;
+
+---to check nulls in our column--We have no nulls
+Select ReferralSource
+from customers.conversion.data
+WHERE ReferralSource IS NULL;
+
+
+-------------Timestamp
+
+---extracting the month,day,hour and year from the timestamp and checking the recent year and early year of the timestamp
+select timestamp,
+monthname(timestamp) as month,
+dayname(timestamp) as day,
+hour(timestamp) as hour,
+year(timestamp) as year,
+max (year(timestamp)) as recent_year,
+min(year(timestamp)) as starting_year
+from customers.conversion.data
+group by timestamp;
+
+
+----------------Itemincart
+
+---creating a lead customers column
+select ItemsInCart, 
+ItemsInCart> 0 as lead_customers    
+from customers.conversion.data;
+
+
+---number of lead customers and uninterested visitors
+select 
+ItemsInCart,
+ ItemsInCart> 0 as lead_customers
+ count(itemsincart) over(partition by lead_customers) as l
+--COUNT(CASE WHEN (ItemsInCart> 0)  = 'true' THEN 1 END) AS lead_customers,
+--COUNT(CASE WHEN (ItemsInCart> 0) = 'false' THEN 1 END) AS uninterested_visitors
+from customers.conversion.data;
+group by (ItemsInCart>0 );
+
+
+SELECT
+    COUNT(DISTINCT CASE
+        WHEN ItemsInCart > 0 THEN SessionID
+    END) AS lead_customers
+FROM customers.conversion.data;
+
+--------------Purchased
+---creating a customers column
+select Purchased, 
+Purchased> 0 as customers   
+from customers.conversion.data;
+
+----number of customers and none customers
+select
+Purchased> 0 as customers,
+COUNT(CASE WHEN (Purchased> 0)  = 'true' THEN 1 END) AS customers,
+COUNT(CASE WHEN (Purchased> 0) = 'false' THEN 1 END) AS None_customers
+from customers.conversion.data
+group by (Purchased>0 );
+
+---to count customer with atleast one item purchased
+SELECT 
+    COUNT(DISTINCT UserID) AS Number_of_customers
+FROM customers.conversion.data
+WHERE Purchased > 0;
+
+-----------PageType
+select distinct(PageType) as distinct_page
+from customers.conversion.data;
+
+
+
+
+
+
+
+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+----------------------------------------CODE
+
+    WITH ranked_activity AS (
+
+    SELECT
+        UserID,
+        timestamp,
+        MONTHNAME(timestamp) AS month,
+        DAYNAME(timestamp) AS day,
+        HOUR(timestamp) AS hour,
+        YEAR(timestamp) AS year,
+        PageType,
+        ReferralSource,
+
+        ROW_NUMBER() OVER(
+            PARTITION BY UserID
+            ORDER BY timestamp DESC
+        ) AS rn
+
+    FROM customers.conversion.data
+)
+
+SELECT
+
+    month,
+    day,
+    hour,
+    year,
+    ReferralSource,
+
+    -- Total visitors (all users)
+    COUNT(DISTINCT UserID) AS total_visitors,
+
+    -- Leads
+    COUNT(DISTINCT CASE 
+        WHEN PageType IN ('cart','checkout')
+        THEN UserID
+    END) AS number_of_leads,
+
+    -- Converted customers
+    COUNT(DISTINCT CASE 
+        WHEN PageType = 'confirmation'
+        THEN UserID
+    END) AS number_of_converted_customers,
+
+    -- Traffic to Lead Conversion Rate
+    COALESCE(
+        TRY_DIVIDE(
+
+            COUNT(DISTINCT CASE 
+                WHEN PageType IN ('cart','checkout')
+                THEN UserID
+            END),
+
+            COUNT(DISTINCT UserID)
+
+        ),
+    0) AS traffic_to_lead_conversion_rate,
+
+    -- Lead to Customer Conversion Rate
+    COALESCE(
+        TRY_DIVIDE(
+
+            COUNT(DISTINCT CASE 
+                WHEN PageType = 'confirmation'
+                THEN UserID
+            END),
+
+            COUNT(DISTINCT CASE 
+                WHEN PageType IN ('cart','checkout')
+                THEN UserID
+            END)
+
+        ),
+    0) AS lead_to_customer_conversion_rate,
+
+    -- Lead Drop-off Rate
+    COALESCE(
+        TRY_DIVIDE(
+
+            COUNT(DISTINCT CASE 
+                WHEN PageType IN ('cart','checkout')
+                THEN UserID
+            END)
+
+            -
+
+            COUNT(DISTINCT CASE 
+                WHEN PageType = 'confirmation'
+                THEN UserID
+            END),
+
+            COUNT(DISTINCT CASE 
+                WHEN PageType IN ('cart','checkout')
+                THEN UserID
+            END)
+
+        ),
+    0) AS lead_dropoff_rate,
+
+    -- Visitor Drop-off Rate
+    COALESCE(
+        TRY_DIVIDE(
+
+            COUNT(DISTINCT UserID)
+
+            -
+
+            COUNT(DISTINCT CASE 
+                WHEN PageType IN ('cart','checkout')
+                THEN UserID
+            END),
+
+            COUNT(DISTINCT UserID)
+
+        ),
+    0) AS visitor_dropoff_rate
+
+FROM ranked_activity
+
+WHERE rn = 1
+
+GROUP BY
+    month,
+    day,
+    hour,
+    year,
+    ReferralSource;
+
+
+
+
+
+
+    -
+  
